@@ -1,6 +1,6 @@
-package generators;
-import models.Node;
-import models.Point;
+package wordSearchGenerator.generators;
+import wordSearchGenerator.models.Node;
+import wordSearchGenerator.models.Point;
 
 import java.lang.String;import java.lang.System;
 import java.util.ArrayList;
@@ -51,6 +51,14 @@ public class WordSearchGenerator {
                 buildFailures++;
             }
         }
+    }
+
+    public List<Node> generateNodeList(){
+        List<Node> nodes = new ArrayList<Node>();
+        for(int i = 0; i < nRow; i++)
+            for (int j = 0; j < nCol; j++)
+                nodes.add(wordSearch[i][j]);
+        return nodes;
     }
 
     private void initializeWordSearch() {

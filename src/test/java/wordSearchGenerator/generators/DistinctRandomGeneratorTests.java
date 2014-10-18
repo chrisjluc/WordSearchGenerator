@@ -1,4 +1,4 @@
-package generators;
+package wordSearchGenerator.generators;
 
 import org.junit.Test;
 

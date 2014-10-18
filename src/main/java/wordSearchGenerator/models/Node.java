@@ -1,4 +1,4 @@
-package models; /**
+package wordSearchGenerator.models; /**
  * Created by chrisjluc on 2014-10-16.
  */
 public class Node {

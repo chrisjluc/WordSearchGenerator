@@ -1,4 +1,4 @@
-package generators;import java.lang.Integer;import java.lang.Object;
+package wordSearchGenerator.generators;import java.lang.Integer;import java.lang.Object;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
