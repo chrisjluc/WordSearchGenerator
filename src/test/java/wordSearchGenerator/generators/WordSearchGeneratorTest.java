@@ -1,10 +1,12 @@
 package wordSearchGenerator.generators;
 
 import org.junit.Test;
+import wordSearchGenerator.models.Point;
 
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by chrisjluc on 2014-10-17.
@@ -37,9 +39,22 @@ public class WordSearchGeneratorTest {
     }
 
     @Test
+    public void testRelativePointLeft(){
+        Point p =  WordSearchGenerator.getRelativePoint(WordSearchGenerator.LEFT, new Point(1,2), 1);
+        assertEquals(new Point(0,2), p);
+    }
+
+    @Test
+    public void testRelativePointRightUp(){
+        Point p =  WordSearchGenerator.getRelativePoint(WordSearchGenerator.RIGHTUP, new Point(0,0), 5);
+        assertEquals(new Point(5,-5), p);
+    }
+
+    @Test
     public void testBuildWordSearchSmall(){
-        WordSearchGenerator w = new WordSearchGenerator(30,20,"run");
+        WordSearchGenerator w = new WordSearchGenerator(5,5,"okay");
         w.build();
+        w.print();
     }
 
     @Test
