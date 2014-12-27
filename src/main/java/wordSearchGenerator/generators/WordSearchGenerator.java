@@ -1,7 +1,5 @@
 package wordSearchGenerator.generators;
 
-import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.apache.commons.lang3.mutable.MutableInt;
 import wordSearchGenerator.models.Node;
 import wordSearchGenerator.models.Point;
 import wordSearchGenerator.models.PossibleInstance;
@@ -100,7 +98,7 @@ public class WordSearchGenerator {
 
                     // If the first or last character, continue
                     if (candidate == mWord.charAt(0) || candidate == mWord.charAt(mWord.length() - 1)) {
-                        if (isAllOrientationsValid(candidate, currentPoint))
+                        if (areAllOrientationsValid(candidate, currentPoint))
                             break;
                     } else if (arePossibleInstancesSatisfied(candidate, currentPoint)) break;
 
@@ -115,20 +113,36 @@ public class WordSearchGenerator {
         }
     }
 
-    private boolean isAllOrientationsValid(char candidate, Point p) {
+    private boolean areAllOrientationsValid(char candidate, Point p) {
         int nOrientations = 8;
-        for (int i = 0; i < nOrientations; i++) {
-            String s = getStringByOrientation(i, p);
+        for (int o = 0; o < nOrientations; o++) {
+            String s = getStringByOrientation(o, p);
             if (s == null) continue;
             s = "" + candidate + s;
 
             if (mWord.equals(s) || mWord.equals(StringUtils.reverse(s))) return false;
 
-            MutableBoolean isReversed = new MutableBoolean(false);
-            MutableInt index = new MutableInt(-1);
+            if (isChanceOfPossibleInstance(s)) {
+                // index of first '0', we will set this node to have a possible instance
+                for (int i = 0; i < s.length(); i++) {
+                    if (s.charAt(i) == '0') {
+                        validateAndSetPossibleInstance(p, i, o, false);
+                        break;
+                    } else if (s.charAt(i) != mWord.charAt(i)) {
+                        break;
+                    }
+                }
 
-            if (isChanceOfPossibleInstance(s, index, isReversed))
-                validateAndSetPossibleInstance(p, index.intValue(), i, isReversed.toBoolean());
+                // Compare with the reverse and see if there's a chance
+                for (int i = 0; i < s.length(); i++) {
+                    if (s.charAt(i) == '0') {
+                        validateAndSetPossibleInstance(p, i, o, true);
+                        break;
+                    } else if (s.charAt(i) != mWord.charAt(s.length() - 1 - i)) {
+                        break;
+                    }
+                }
+            }
         }
         return true;
     }
@@ -139,54 +153,33 @@ public class WordSearchGenerator {
      * and we find a string such as ea0y, e0sy or e00y
      * We want to create a flag which tells the generator
      * there is a chance of creating another instance of that word
-     * <p/>
      * e000 there is no possible instance needed because will check the 4th position
      * if there is a last character and invalidate it
      *
      * @param s
-     * @param index      index of first '0', we will set this node to have a possible instance
-     * @param isReversed
      * @return if there is a possible instance
      */
-    private boolean isChanceOfPossibleInstance(String s, MutableInt index, MutableBoolean isReversed) {
+    private boolean isChanceOfPossibleInstance(String s) {
         if (s.length() != mWord.length()) return false;
+        for (int i = 0; i < s.length(); i++)
+            if (s.charAt(i) != mWord.charAt(i) && s.charAt(i) != '0')
+                return false;
 
+
+        int matches0 = org.apache.commons.lang3.StringUtils.countMatches(s, "0");
+        // if 1 '0' and it's at beginning or end areAllOrientationsValid will check it
+        if (matches0 == 1 && (s.charAt(0) == '0' || s.charAt(mWord.length() - 1) == '0'))
+            return false;
         // If all but 1 character is '0' no possible chance because we check all orientation when at first or last character
         // also if there are no '0' there can't be a chance because no open spaces in to insert a character
-        int matches0 = org.apache.commons.lang3.StringUtils.countMatches(s, "0");
-        if (s.length() - matches0 == 1 || matches0 == 0) return false;
-
-        int countMatching = 0;
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == mWord.charAt(i))
-                countMatching++;
-            else if (index.intValue() == -1)
-                index.setValue(i);
-        }
-        if (countMatching > 1)
-            return true;
-
-        // Compare with the reverse and see if there's a chance
-        countMatching = 0;
-        index.setValue(-1);
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == mWord.charAt(s.length() - 1 - i))
-                countMatching++;
-            else if (index.intValue() == -1)
-                index.setValue(i);
-        }
-        if (countMatching > 1) {
-            isReversed.setTrue();
-            return true;
-        }
-        return false;
+        return s.length() - matches0 != 1 && matches0 != 0;
     }
 
     /**
      * Next node which is current point incremented by position by relative orientation
      * holds the possibleInstance
      *
-     * @param point
+     * @param point       current point
      * @param position    to set in possible instance
      * @param orientation
      * @return
