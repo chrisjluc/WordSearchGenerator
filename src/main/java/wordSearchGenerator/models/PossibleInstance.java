@@ -6,10 +6,11 @@ package wordSearchGenerator.models;
 public class PossibleInstance {
 
     /**
-     * Position of character in word
+     * Index of character in word
      * ex. Word is abcd, position is 1, so we know the letter of interest is b
+     * Index of word when reversed wordLength - 1 - indexInWord
      */
-    public int positionInWord;
+    public int indexInWord;
 
     /**
      * orientation of possible instance
@@ -21,9 +22,9 @@ public class PossibleInstance {
      */
     public boolean reversed;
 
-    public PossibleInstance(int orientation, boolean reversed, int positionInWord) {
+    public PossibleInstance(int orientation, boolean reversed, int indexInWord) {
         this.orientation = orientation;
         this.reversed = reversed;
-        this.positionInWord = positionInWord;
+        this.indexInWord = indexInWord;
     }
 }

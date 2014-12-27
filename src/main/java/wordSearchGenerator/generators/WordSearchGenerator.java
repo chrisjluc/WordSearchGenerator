@@ -15,7 +15,8 @@ public class WordSearchGenerator {
     private String mWord;
     private int nRow;
     private int nCol;
-    private Node[][] mWordSearch;
+    private Node[][] mWordSearchNodeMatrix;
+    private char[][] mWordSearchCharMatrix;
     private Random mRandom = new Random();
 
     private Point mRandomPoint;
@@ -30,7 +31,8 @@ public class WordSearchGenerator {
         this.nCol = nCol;
         this.mWord = mWord;
 
-        this.mWordSearch = new Node[nRow][nCol];
+        this.mWordSearchNodeMatrix = new Node[nRow][nCol];
+        this.mWordSearchCharMatrix = new char[nRow][nCol];
         initializeWordSearch();
     }
 
@@ -46,17 +48,21 @@ public class WordSearchGenerator {
                 mBuildFailures++;
             }
         }
+        for (int i = 0; i < nRow; i++) {
+            for (int j = 0; j < nCol; j++) {
+                mWordSearchCharMatrix[i][j] = mWordSearchNodeMatrix[i][j].getLetter();
+            }
+        }
     }
 
     public void print() {
         for (int i = 0; i < nRow; i++) {
             for (int j = 0; j < nCol; j++) {
-                System.out.print(mWordSearch[i][j].getLetter());
+                System.out.print(mWordSearchNodeMatrix[i][j].getLetter());
             }
             System.out.println();
         }
         System.out.println();
-
     }
 
     public List<Point> getStartAndEndPointOfWord() {
@@ -70,7 +76,7 @@ public class WordSearchGenerator {
     private void initializeWordSearch() {
         for (int i = 0; i < nRow; i++)
             for (int j = 0; j < nCol; j++)
-                mWordSearch[i][j] = new Node();
+                mWordSearchNodeMatrix[i][j] = new Node();
     }
 
 // -------------- LETTER INSERTION ALGORITHM METHODS --------------------//
@@ -83,7 +89,7 @@ public class WordSearchGenerator {
     private void fillWordSearch() throws Exception {
         for (int i = 0; i < nRow; i++) {
             for (int j = 0; j < nCol; j++) {
-                Node n = mWordSearch[i][j];
+                Node n = mWordSearchNodeMatrix[i][j];
                 // Word isn't empty if that letter is part of the inserted word to be found
                 if (!n.isEmpty()) continue;
                 Point currentPoint = new Point(i, j);
@@ -119,11 +125,10 @@ public class WordSearchGenerator {
             if (mWord.equals(s) || mWord.equals(StringUtils.reverse(s))) return false;
 
             MutableBoolean isReversed = new MutableBoolean(false);
-            MutableInt position = new MutableInt(-1);
+            MutableInt index = new MutableInt(-1);
 
-            if (isChanceOfPossibleInstance(s, position, isReversed))
-                validateAndSetPossibleInstance(p, position.intValue(), i, isReversed.toBoolean());
-
+            if (isChanceOfPossibleInstance(s, index, isReversed))
+                validateAndSetPossibleInstance(p, index.intValue(), i, isReversed.toBoolean());
         }
         return true;
     }
@@ -139,11 +144,11 @@ public class WordSearchGenerator {
      * if there is a last character and invalidate it
      *
      * @param s
-     * @param position   index of first '0', we will set this node to have a possible instance
+     * @param index      index of first '0', we will set this node to have a possible instance
      * @param isReversed
      * @return if there is a possible instance
      */
-    private boolean isChanceOfPossibleInstance(String s, MutableInt position, MutableBoolean isReversed) {
+    private boolean isChanceOfPossibleInstance(String s, MutableInt index, MutableBoolean isReversed) {
         if (s.length() != mWord.length()) return false;
 
         // If all but 1 character is '0' no possible chance because we check all orientation when at first or last character
@@ -155,20 +160,20 @@ public class WordSearchGenerator {
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) == mWord.charAt(i))
                 countMatching++;
-            else if (position.intValue() == -1)
-                position.setValue(i);
+            else if (index.intValue() == -1)
+                index.setValue(i);
         }
         if (countMatching > 1)
             return true;
 
         // Compare with the reverse and see if there's a chance
         countMatching = 0;
-        position.setValue(-1);
+        index.setValue(-1);
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) == mWord.charAt(s.length() - 1 - i))
                 countMatching++;
-            else if (position.intValue() == -1)
-                position.setValue(i);
+            else if (index.intValue() == -1)
+                index.setValue(i);
         }
         if (countMatching > 1) {
             isReversed.setTrue();
@@ -191,7 +196,7 @@ public class WordSearchGenerator {
         if (position >= mWord.length() - 1) return;
 
         Point relativePoint = getRelativePoint(orientation, point, position);
-        Node relativeNode = mWordSearch[relativePoint.x][relativePoint.y];
+        Node relativeNode = mWordSearchNodeMatrix[relativePoint.x][relativePoint.y];
 
         // There exists a character already, can't write a character here
         if (!relativeNode.isEmpty()) return;
@@ -200,63 +205,93 @@ public class WordSearchGenerator {
         relativeNode.addToPossibleInstances(pi);
     }
 
+    /**
+     * Word is easy, ex. e00y
+     * If 'a' is valid for 2nd letter
+     * Will assign the possible instance of 2nd letter to 3rd letter to watch out for 's'
+     * Handles reversed when creating possible instance
+     *
+     * @param point of current node of interest
+     * @param delta
+     * @param pi    possible instance to extend
+     */
     private void extendPossibleInstance(Point point, int delta, PossibleInstance pi) {
-        Point relativePoint = getRelativePoint(pi.orientation, point, delta + pi.positionInWord);
-        Node relativeNode = mWordSearch[relativePoint.x][relativePoint.y];
+        Point relativePoint = getRelativePoint(pi.orientation, point, delta + pi.indexInWord);
+        Node relativeNode = mWordSearchNodeMatrix[relativePoint.x][relativePoint.y];
         if (!relativeNode.isEmpty()) return;
-        PossibleInstance relativePi = new PossibleInstance(pi.orientation, pi.reversed, delta + pi.positionInWord);
+        PossibleInstance relativePi = new PossibleInstance(pi.orientation, pi.reversed, delta + pi.indexInWord);
         relativeNode.addToPossibleInstances(relativePi);
     }
 
-    private boolean arePossibleInstancesSatisfied(char candidate, Point p) {
+    /**
+     * Checks if possible instances are handled
+     *
+     * @param candidate    candidate character
+     * @param currentPoint
+     * @return candidate character is allowed to be set
+     */
+    private boolean arePossibleInstancesSatisfied(char candidate, Point currentPoint) {
 
-        Node current = mWordSearch[p.x][p.y];
+        Node current = mWordSearchNodeMatrix[currentPoint.x][currentPoint.y];
         List<PossibleInstance> possibleInstances = current.getPossibleInstances();
         if (possibleInstances == null) return true;
         int wordLength = mWord.length();
         for (PossibleInstance pi : possibleInstances) {
 
             // Continue if candidate isn't the character at the position in the Word
-            if ((!pi.reversed && mWord.charAt(pi.positionInWord) == candidate) || (pi.reversed && mWord.charAt(wordLength - 1 - pi.positionInWord) == candidate)) {
-            } else
+            // ex. easy
+            // current candidate is s for es0y, can continue if not the letter that causes possible instance
+            if ((pi.reversed || mWord.charAt(pi.indexInWord) != candidate) && (!pi.reversed || mWord.charAt(wordLength - 1 - pi.indexInWord) != candidate))
                 continue;
 
-            if (pi.positionInWord == wordLength - 1)
-                return false;
+            Point nextPoint = getRelativePoint(pi.orientation, currentPoint, 1);
+            Node next = mWordSearchNodeMatrix[nextPoint.x][nextPoint.y];
 
-            Point nextPoint = getRelativePoint(pi.orientation, p, 1);
-            Node next = mWordSearch[nextPoint.x][nextPoint.y];
+            // Next character is empty and next character isn't the end of the word
+            if (next.isEmpty() && pi.indexInWord < wordLength - 2) {
 
-            // Next character is empty and isn't the end of the word, if it's the end of the word
-            // it would be checked by isAllOrientations Valid
-            if (next.isEmpty() && pi.positionInWord < wordLength - 1) {
+                // ea0y, set possible instance for letter s because not at end of word yet
+                extendPossibleInstance(currentPoint, 1, pi);
 
-                // The next character is the end of the Word
-                if (pi.positionInWord >= wordLength - 2)
-                    continue;
-
-                extendPossibleInstance(p, 1, pi);
+                // ex. word is easy
+                // The next character is the end of the word
+                // it would be checked by isAllOrientations Valid
+            } else if (next.isEmpty() && pi.indexInWord >= wordLength - 2) {
+                continue;
 
                 // Next letter isn't empty but isn't the next character in the word.
-                // Th string won't match the word anymore, so current letter and possibleInstance is valid, continue on
-            } else if ((!pi.reversed && next.getLetter() != mWord.charAt(pi.positionInWord + 1)) || (pi.reversed && next.getLetter() != mWord.charAt(wordLength - 2 - pi.positionInWord))) {
+                // The string won't match the word anymore, so current letter and possibleInstance is valid, continue on
+            } else if ((!pi.reversed && next.getLetter() != mWord.charAt(pi.indexInWord + 1))
+                    || (pi.reversed && next.getLetter() != mWord.charAt(wordLength - 2 - pi.indexInWord))) {
+                continue;
 
-
-                // Next letter is equal to the next character in the word and the character after that is empty.
-                // If that position 2 over is not the end of the letter, create a possible instance there.
-            } else if ((!pi.reversed && next.getLetter() == mWord.charAt(pi.positionInWord + 1)) || (pi.reversed && next.getLetter() == mWord.charAt(wordLength - 2 - pi.positionInWord))) {
+                // Next letter is equal to the next character in the word
+            } else if ((!pi.reversed && next.getLetter() == mWord.charAt(pi.indexInWord + 1))
+                    || (pi.reversed && next.getLetter() == mWord.charAt(wordLength - 2 - pi.indexInWord))) {
 
                 // The next character is the end of the word
-                if (pi.positionInWord >= wordLength - 2)
+                if (pi.indexInWord >= wordLength - 2)
                     return false;
 
+                Point nextNextPoint = getRelativePoint(pi.orientation, nextPoint, 1);
+                Node nextNext = mWordSearchNodeMatrix[nextNextPoint.x][nextNextPoint.y];
+
                 // The next next character will be the end of the word
-                if (pi.positionInWord >= wordLength - 3)
+                // ex. word is hell
+                // h0l0, isAllValidOrientations would check this
+                if (pi.indexInWord >= wordLength - 3 && nextNext.isEmpty()) {
                     continue;
 
-                Point nextNextPoint = getRelativePoint(pi.orientation, nextPoint, 1);
-                Node nextNext = mWordSearch[nextNextPoint.x][nextNextPoint.y];
+                    // h0ll, and candidate was 'e'
+                    // don't allow 'e' if next next is end of word
+                } else if (pi.indexInWord >= wordLength - 3
+                        && ((!pi.reversed && nextNext.getLetter() == mWord.charAt(wordLength - 1)) ||
+                        (pi.reversed && nextNext.getLetter() == mWord.charAt(0)))) {
+                    return false;
+                }
 
+                // Ex Word is hello
+                // h0l00, at index 1 testing 'e'
                 if (nextNext.isEmpty())
                     extendPossibleInstance(nextPoint, 2, pi);
             }
@@ -286,7 +321,7 @@ public class WordSearchGenerator {
     private void insertWordWithOrientation(int orientation, Point p) {
         for (int i = 0; i < mWord.length(); i++) {
             Point relative = getRelativePoint(orientation, p, i);
-            mWordSearch[relative.x][relative.y].setLetter(mWord.charAt(i));
+            mWordSearchNodeMatrix[relative.x][relative.y].setLetter(mWord.charAt(i));
         }
     }
 
@@ -365,7 +400,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x + i][p.y].getLetter();
+            ret += mWordSearchNodeMatrix[p.x + i][p.y].getLetter();
         }
         return ret;
     }
@@ -375,7 +410,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x + i][p.y + i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x + i][p.y + i].getLetter();
         }
         return ret;
     }
@@ -385,7 +420,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x][p.y + i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x][p.y + i].getLetter();
         }
         return ret;
     }
@@ -395,7 +430,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x - i][p.y + i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x - i][p.y + i].getLetter();
         }
         return ret;
     }
@@ -405,7 +440,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x - i][p.y].getLetter();
+            ret += mWordSearchNodeMatrix[p.x - i][p.y].getLetter();
         }
         return ret;
     }
@@ -415,7 +450,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x - i][p.y - i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x - i][p.y - i].getLetter();
         }
         return ret;
     }
@@ -425,7 +460,7 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x][p.y - i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x][p.y - i].getLetter();
         }
         return ret;
     }
@@ -435,8 +470,24 @@ public class WordSearchGenerator {
             return null;
         String ret = "";
         for (int i = 1; i <= d; i++) {
-            ret += mWordSearch[p.x + i][p.y - i].getLetter();
+            ret += mWordSearchNodeMatrix[p.x + i][p.y - i].getLetter();
         }
         return ret;
+    }
+
+    public String getWord() {
+        return mWord;
+    }
+
+    public int getnRow() {
+        return nRow;
+    }
+
+    public int getnCol() {
+        return nCol;
+    }
+
+    public char[][] getWordSearchCharMatrix() {
+        return mWordSearchCharMatrix;
     }
 }
