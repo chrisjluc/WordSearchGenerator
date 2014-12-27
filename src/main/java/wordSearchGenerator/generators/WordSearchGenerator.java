@@ -1,5 +1,6 @@
 package wordSearchGenerator.generators;
 
+import wordSearchGenerator.models.FillType;
 import wordSearchGenerator.models.Node;
 import wordSearchGenerator.models.Point;
 import wordSearchGenerator.models.PossibleInstance;
@@ -9,33 +10,37 @@ import java.util.List;
 import java.util.Random;
 
 public class WordSearchGenerator {
-    private List<Character> mUniqueChars;
+    private Character[] mFillChars;
     private String mWord;
     private int nRow;
     private int nCol;
     private Node[][] mWordSearchNodeMatrix;
     private char[][] mWordSearchCharMatrix;
     private Random mRandom = new Random();
-
     private Point mRandomPoint;
     private Integer mRandomOrientation;
-
     private int mBuildFailures = 0;
 
     public static final int RIGHT = 0, RIGHTDOWN = 1, DOWN = 2, LEFTDOWN = 3, LEFT = 4, LEFTUP = 5, UP = 6, RIGHTUP = 7;
+    private static final Character[] alphabet =
+            {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
-    public WordSearchGenerator(int nRow, int nCol, String mWord) {
+
+    public WordSearchGenerator(int nRow, int nCol, String mWord, FillType type) {
         this.nRow = nRow;
         this.nCol = nCol;
         this.mWord = mWord;
 
         this.mWordSearchNodeMatrix = new Node[nRow][nCol];
         this.mWordSearchCharMatrix = new char[nRow][nCol];
+        if (type == FillType.CharactersOfTheWord)
+            this.mFillChars = StringUtils.getDistinctCharacters(mWord);
+        else
+            this.mFillChars = alphabet;
         initializeWordSearch();
     }
 
-    public void build() {
-        mUniqueChars = StringUtils.getDistinctCharacters(mWord);
+    public char[][] build() {
         while (true) {
             try {
                 insertWord();
@@ -51,6 +56,7 @@ public class WordSearchGenerator {
                 mWordSearchCharMatrix[i][j] = mWordSearchNodeMatrix[i][j].getLetter();
             }
         }
+        return mWordSearchCharMatrix;
     }
 
     public void print() {
@@ -91,7 +97,7 @@ public class WordSearchGenerator {
                 // Word isn't empty if that letter is part of the inserted word to be found
                 if (!n.isEmpty()) continue;
                 Point currentPoint = new Point(i, j);
-                DistinctRandomGenerator charGenerator = new DistinctRandomGenerator(mUniqueChars);
+                DistinctRandomGenerator charGenerator = new DistinctRandomGenerator(mFillChars);
                 // Generate random character from unique chars
                 Character candidate = (Character) charGenerator.next();
                 while (candidate != null) {
