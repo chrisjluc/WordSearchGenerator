@@ -1,7 +1,7 @@
-Creates a word search grid with one instance of the string you choose, and fills in the rest of the grid with characters from that string. Uses dynamic programming to keep track of additional possible instances and prevents  character insertions that would make the chosen word.
+Creates a word search grid with one instance of the string you choose, and fills in the rest of the grid with characters from that string or random characters. Uses a special datastructure and algorithm to keep track of additional possible instances and prevents character insertions that would make the chosen word.
 
 ````
-WordSearchGenerator w = new WordSearchGenerator(3,3,"run");
+WordSearchGenerator w = new WordSearchGenerator(3, 3, "run", FillType.CharactersOfTheWord);
 w.build();
 ````
 
@@ -13,7 +13,7 @@ w.build();
 0u0
 0n0
 ````
-2) Fills the rest of the grid with letters from the input string.
+2) Fills the rest of the grid with letters from the input string
 
 ````
 rrn
@@ -24,7 +24,7 @@ unu
 #####Example input / output - Can you find the word?
 
 ````
-WordSearchGenerator w = new WordSearchGenerator(7,7,"hello");
+WordSearchGenerator w = new WordSearchGenerator(7, 7, "hello", FillType.CharactersOfTheWord);
 w.build();
 
 eelello
@@ -38,15 +38,15 @@ loehhlh
 ````
 
 ````
-WordSearchGenerator w = new WordSearchGenerator(8,8,"coding");
+WordSearchGenerator w = new WordSearchGenerator(8, 8, "coding", FillType.RandomCharacters);
 w.build();
 
-gogcdcdn
-dgogniod
-igcooino
-gcoondgg
-ddddoddg
-cgicoono
-dongdcci
-gdgogdgn
+qbivqaoa
+lxcajhsx
+ixbfkwsq
+mnzdawhf
+qtvcwzwu
+fdovwkwb
+gnidocmn
+qqtwsqby
 ````
