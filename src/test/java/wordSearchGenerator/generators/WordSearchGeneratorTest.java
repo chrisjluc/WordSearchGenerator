@@ -8,14 +8,11 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by chrisjluc on 2014-10-17.
- */
 public class WordSearchGeneratorTest {
 
     @Test
     public void testUniqueCharactersAllUnique(){
-        List<Character> c = WordSearchGenerator.getDistinctCharacters("hela");
+        List<Character> c = StringUtils.getDistinctCharacters("hela");
         assertEquals(4, c.size());
         assertTrue(c.contains('h'));
         assertTrue(c.contains('e'));
@@ -25,7 +22,7 @@ public class WordSearchGeneratorTest {
 
     @Test
     public void testUniqueCharactersSomeUnique(){
-        List<Character> c = WordSearchGenerator.getDistinctCharacters("hhelaaaaaaa");
+        List<Character> c = StringUtils.getDistinctCharacters("hhelaaaaaaa");
         assertEquals(4, c.size());
         assertTrue(c.contains('h'));
         assertTrue(c.contains('e'));
@@ -35,7 +32,7 @@ public class WordSearchGeneratorTest {
 
     @Test
     public void testReverse(){
-        assertEquals(";lkjfdsa", WordSearchGenerator.reverse("asdfjkl;"));
+        assertEquals(";lkjfdsa", StringUtils.reverse("asdfjkl;"));
     }
 
     @Test
@@ -51,20 +48,34 @@ public class WordSearchGeneratorTest {
     }
 
     @Test
-    public void testBuildWordSearchSmall(){
-        WordSearchGenerator w = new WordSearchGenerator(5,5,"okay");
+    public void testBuildWordSearch1(){
+        WordSearchGenerator w = new WordSearchGenerator(7,7,"hey");
         w.build();
         w.print();
     }
 
     @Test
-    public void testBuildWordSearchMedium(){
+    public void testBuildWordSearch2(){
+        WordSearchGenerator w = new WordSearchGenerator(7,7,"time");
+        w.build();
+        w.print();
+    }
+
+    @Test
+    public void testBuildWordSearch3(){
+        WordSearchGenerator w = new WordSearchGenerator(15,15,"timewatch");
+        w.build();
+        w.print();
+    }
+
+    @Test
+    public void testBuildWordSearch4(){
         WordSearchGenerator w = new WordSearchGenerator(500,500,"bigger");
         w.build();
     }
 
     @Test
-    public void testBuildWordSearchLarge(){
+    public void testBuildWordSearch5(){
         WordSearchGenerator w = new WordSearchGenerator(1000,1000,"verylargewordsearch");
         w.build();
     }

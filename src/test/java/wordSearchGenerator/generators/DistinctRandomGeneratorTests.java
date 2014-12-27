@@ -7,9 +7,6 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by chrisjluc on 2014-10-17.
- */
 public class DistinctRandomGeneratorTests{
 
     @Test

@@ -1,15 +1,12 @@
 package wordSearchGenerator.models;
 
 /**
- * Holds the data required to determine if the current node can hold the candidate character
- *
- * Created by chrisjluc on 2014-10-19.
+ * Holds the data required to determine if the current node can be set to the candidate character
  */
 public class PossibleInstance {
 
     /**
      * Position of character in word
-     *
      * ex. Word is abcd, position is 1, so we know the letter of interest is b
      */
     public int positionInWord;
